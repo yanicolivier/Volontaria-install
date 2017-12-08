@@ -1,0 +1,31 @@
+server {
+{% if ssl %}
+    listen 443;
+
+    ssl on;
+    ssl_certificate     {{ ssl_cert_path }};
+    ssl_certificate_key {{ ssl_key_path }};
+
+{% else %}
+    listen 80;
+{% endif %}
+    server_name {{ domain }};
+
+    index index.html index.htm;
+    root {{ path }}/dist;
+
+    access_log {{ path }}/log/{{ name }}.access.log;
+    error_log {{ path }}/log/{{ name }}.error.log error;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+{% if ssl %}
+server {
+    listen 80;
+    server_name {{ domain }};
+    rewrite ^/(.*) https://{{ domain }}/$1 permanent;
+}
+{% endif %}

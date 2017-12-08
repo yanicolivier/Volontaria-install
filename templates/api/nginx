@@ -1,0 +1,57 @@
+upstream {{ name }} {
+    server 127.0.0.1:{{ port }} fail_timeout=0;
+}
+
+server {
+{% if ssl %}
+        listen 443;
+
+        ssl on;
+        ssl_certificate     {{ ssl_cert_path }};
+        ssl_certificate_key {{ ssl_key_path }};
+
+{% else %}
+        listen 80;
+{% endif %}
+        root {{ path }}/source/static;
+        index index.html index.htm;
+
+        server_name {{ domain }};
+
+        access_log {{ path }}/source/log/api.access.log;
+        error_log {{ path }}/source/log/api.error.log error;
+
+        location / {
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Host $http_host;
+                proxy_redirect off;
+                if (!-f $request_filename) {
+                        proxy_pass http://{{ name }};
+                        break;
+                }
+        }
+
+        location /static {
+                # Browser and cache optimisation
+                autoindex off;
+                expires 30d;
+                gzip on;
+                gzip_disable "msie6";
+                gzip_types
+                    text/plain
+                    text/css
+                    text/js
+                    text/javascript
+                    application/javascript
+                    application/x-javascript;
+                alias {{ path }}/source/static/;
+        }
+}
+
+{% if ssl %}
+server {
+    listen 80;
+    server_name {{ domain }};
+    rewrite ^/(.*) https://{{ domain }}/$1 permanent;
+}
+{% endif %}

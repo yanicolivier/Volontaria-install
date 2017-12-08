@@ -1,0 +1,10 @@
+[program:{{ name }}]
+command={{base_path}}/API-env/bin/gunicorn --pythonpath={{ path }}/source/apiVolontaria/apiVolontaria wsgi -b 127.0.0.1:{{ port }}
+directory={{ path }}/source/apiVolontaria/
+user=yanic
+autostart=true
+autorestart=true
+redirect_stderr=True
+stdout_logfile={{ path }}/source/log/api.django.log
+stdout_logfile_maxbytes=2MB
+stdout_logfile_backups=0
